@@ -1,0 +1,8 @@
+name: 作品集プラグイン
+code: Portfolio
+version: 1.0.0
+orm.path:
+    - /Resource/doctrine
+service:
+    - PortfolioServiceProvider
+event: PortfolioEvent

@@ -1,0 +1,68 @@
+Plugin\Portfolio\Entity\PortfolioData:
+    type: entity
+    table: plg_portfolio
+    repositoryClass: Plugin\Portfolio\Repository\PortfolioDataRepository
+    indexes:
+        id:
+            columns: id
+    id:
+        id:
+            type: smallint
+            nullable: false
+            unsigned: false
+            id: true
+            generator:
+                strategy: NONE
+    fields:
+        order_id:
+            type: integer
+            nullable: false
+            column: order_id
+        customer_id:
+            type: integer
+            nullable: false
+            column: customer_id
+        name:
+            type: text
+            nullable: false
+            column: name
+        product_id:
+            type: integer
+            nullable: false
+            column: product_id
+        type:
+            type: text
+            nullable: false
+            column: type
+        publish:
+            type: smallint
+            nullable: false
+            column: publish
+        img:
+            type: text
+            nullable: false
+            column: img
+        page_no:
+            type: integer
+            nullable: false
+            column: page_no
+        comment:
+            type: text
+            nullable: false
+            column: comment
+        rank:
+            type: integer
+            nullable: false
+            column: rank
+        create_date:
+            type: datetime
+            nullable: false
+            
+        update_date:
+            type: datetime
+            nullable: false
+        del_flg:
+            type: smallint
+            nullable: true
+            column: del_flg
+    lifecycleCallbacks: {  }

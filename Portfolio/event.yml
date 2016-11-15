@@ -1,0 +1,4 @@
+eccube.event.render.homepage.before:
+    - [afterLogin, NORMAL]
+eccube.event.route.shopping_complete.response:
+    - [afterOrder, NORMAL]

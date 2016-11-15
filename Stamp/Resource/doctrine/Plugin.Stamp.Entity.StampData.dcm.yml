@@ -1,0 +1,44 @@
+Plugin\Stamp\Entity\StampData:
+    type: entity
+    table: plg_stamp
+    repositoryClass: Plugin\Stamp\Repository\StampDataRepository
+    indexes:
+        id:
+            columns: id
+    id:
+        id:
+            type: smallint
+            nullable: false
+            unsigned: false
+            id: true
+            generator:
+                strategy: NONE
+    fields:
+        name:
+            type: text
+            nullable: false
+            column: name
+        type:
+            type: text
+            nullable: false
+            column: type
+        publish:
+            type: smallint
+            nullable: false
+            column: publish
+        img:
+            type: text
+            nullable: true
+            column: img
+        rank:
+            type: smallint
+            nullable: true
+            column: rank
+        create_date:
+            type: datetime
+            nullable: false
+            
+        update_date:
+            type: datetime
+            nullable: false
+    lifecycleCallbacks: {  }

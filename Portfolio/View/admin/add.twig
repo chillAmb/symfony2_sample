@@ -1,0 +1,162 @@
+{#
+ This file is part of EC-CUBE
+
+ Copyright(c) 2000-2015 LOCKON CO.,LTD. All Rights Reserved.
+ http://www.lockon.co.jp/
+
+ For the full copyright and license information, please view the LICENSE
+ file that was distributed with this source code.
+#}
+{% extends 'default_frame.twig' %}
+
+{% set menus = ['mailmagazine', 'mailmagazine_template'] %}
+
+{% block title %}スタンプ設定{% endblock %}
+{% block sub_title %}スタンプ情報登録{% endblock %}
+
+{% form_theme form 'Form/bootstrap_3_horizontal_layout.html.twig' %}
+
+{% block javascript %}
+<script src="{{ app.config.admin_urlpath }}/assets/js/vendor/fileupload/vendor/jquery.ui.widget.js"></script>
+<script src="{{ app.config.admin_urlpath }}/assets/js/vendor/fileupload/jquery.iframe-transport.js"></script>
+<script src="{{ app.config.admin_urlpath }}/assets/js/vendor/fileupload/jquery.fileupload.js"></script>
+<script src="{{ app.config.admin_urlpath }}/assets/js/vendor/fileupload/jquery.fileupload-process.js"></script>
+<script src="{{ app.config.admin_urlpath }}/assets/js/vendor/fileupload/jquery.fileupload-validate.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.11.4/jquery-ui.min.js"></script>
+<script>
+$(function() {
+    var typenum = {{ typenum }};
+    $('#admin_stamp_edit_typeform input').eq(typenum).attr('checked', 'checked');
+    $('#formtype').val({{ typenum }});
+
+    var count_add = {{ form.add_images|length|default(0) }};
+    $('#admin_stamp_image').fileupload({
+        url: "../edit/addimg",
+        type: "post",
+        dataType: 'json',
+        done: function (e, data) {
+            $.each(data.files, function (index, file) {
+            });
+        $('#progress').hide();
+//        hideSvg();
+        },
+        always: function (e, data) {
+            console.log(data.result.files);
+            $('ul#thumb').html('<img src="{{ url('homepage') }}' + data.result.files + '" width="200">');
+//            $('#admin_stamp_image').val(data.result.files);
+            $('input#filename').val(data.result.files);
+            $('#progress').hide();
+            $('#progress .progress-bar').width('0%');
+        },
+        start: function (e, data) {
+            $('#progress').show();
+        },
+        acceptFileTypes: /(\.|\/)(gif|jpe?g|png)$/i,
+        maxFileSize: 10000000,
+        maxNumberOfFiles: 10,
+        progressall: function (e, data) {
+            var progress = parseInt(data.loaded / data.total * 100, 10);
+            $('#progress .progress-bar').css(
+                    'width',
+                    progress + '%'
+            );
+        },
+        processalways: function (e, data) {
+            if (data.files.error) {
+                alert("画像ファイルサイズが大きいか画像ファイルではありません。");
+            }
+        }
+    });
+    // 画像アップロード
+    $('#file_upload').on('click', function () {
+        $('#admin_stamp_image').click();
+    });
+
+
+    $('#type input').change(function(){
+        var checknum = $('#type input').index(this);
+        $('#formtype').val(checknum);
+    });
+});
+</script>
+{% endblock javascript %}
+
+{% block main %}
+    <form role="form" name="content_page_form" id="content_page_form" method="post"
+          action="../commit">
+        {{ form_widget(form._token) }}
+        <div class="row" id="aside_wrap">
+            <div class="col-md-9">
+                <div class="box form-horizontal">
+                    <div class="box-header">
+                        <h3 class="box-title">スタンプ編集</h3>
+                    </div>
+                    <!-- /.box-header -->
+                    <div class="box-body">
+                        <div class="form-group">
+                            <div class="col-sm-9 col-lg-10"> 
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            {{ form_label(form.name) }}
+                            <div class="col-sm-9 col-lg-10">
+                                {{ form_widget(form.name) }}
+                                {{ form_errors(form.name) }}
+                            </div>
+                        </div>
+
+                        <div class="form-group" id="type">
+                            {{ form_label(form.typeform) }}
+                            <div class="col-sm-9 col-lg-10">
+                                {{ form_widget(form.typeform) }}
+                                {{ form_errors(form.typeform) }}
+                                <input type="hidden" id="formtype" name="admin_stamp_edit[type]" value="">
+                            </div>
+                        </div>
+                        <div id="detail_box__image" class="form-group">
+                            {{ form_label(form.img) }}
+                            <div id="detail_files_box" class="col-sm-9 col-lg-10">
+                                <div class="photo_files" id="drag-drop-area">
+                                    <ul id="thumb" class="clearfix"></ul>
+                                    <input type="hidden" id="filename" name="admin_stamp_edit[img]" value="">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group marB30">
+                            <div id="detail_box__file_upload" class="col-sm-offset-2 col-sm-9 col-lg-10 ">
+                                 <div id="progress" class="progress progress-striped active" style="display:none;">
+                                    <div class="progress-bar progress-bar-info"></div>
+                                 </div>
+                                 <input type="file" id="admin_stamp_image" name="admin_stamp_image" multiple="multiple" accept="image/*" style="display:none;" />
+                                 <a id="file_upload" class="with-icon">
+                                    <svg class="cb cb-plus"> <use xlink:href="#cb-plus" /></svg>ファイルをアップロード
+                                 </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- /.col -->
+            <div class="col-md-3">
+                <div class="col_inner" id="aside_column">
+                    <div class="box no-header">
+                        <div class="box-body">
+                            <div class="row text-center">
+                                <div class="col-sm-6 col-sm-offset-3 col-md-12 col-md-offset-0">
+                                    <button class="btn btn-primary btn-block btn-lg"
+                                            onclick="document.content_page_form.submit();">登録
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- /.box-body -->
+                    </div>
+                    <!-- /.box -->
+                </div>
+            </div>
+            <!-- /.col -->
+        </div>
+    </form>
+
+{% endblock %}

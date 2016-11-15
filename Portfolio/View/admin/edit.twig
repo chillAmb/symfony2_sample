@@ -1,0 +1,322 @@
+{% extends 'default_frame.twig' %}
+
+{% block title %}作品集設定{% endblock %}
+{% block sub_title %}作品情報編集{% endblock %}
+
+{% form_theme form 'Form/bootstrap_3_horizontal_layout.html.twig' %}
+{% block javascript %}
+<script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
+<script src="{{ app.config.admin_urlpath }}/assets/js/vendor/fileupload/vendor/jquery.ui.widget.js"></script>
+<script src="{{ app.config.admin_urlpath }}/assets/js/vendor/fileupload/jquery.iframe-transport.js"></script>
+<script src="{{ app.config.admin_urlpath }}/assets/js/vendor/fileupload/jquery.fileupload.js"></script>
+<script src="{{ app.config.admin_urlpath }}/assets/js/vendor/fileupload/jquery.fileupload-process.js"></script>
+<script src="{{ app.config.admin_urlpath }}/assets/js/vendor/fileupload/jquery.fileupload-validate.js"></script>
+<script src="//ajax.googleapis.com/ajax/libs/jqueryui/1.11.4/jquery-ui.min.js"></script>
+<script src="{{ app.config.admin_urlpath }}/assets/js/lightbox.js"></script>
+<script>
+$(function() {
+    var typenum = {% if type %}{{ type }}{% else %}1{% endif %};
+    $('#admin_portfolio_edit_typeform input').eq(typenum - 1).prop('checked', true);
+    $('#formtype').val(typenum);
+    {% if id == null %}
+    $('#admin_portfolio_edit_typeform input').eq(0).prop('checked', true);
+    $('#formtype').val(1);
+    {% endif %}
+    var count_add = {{ form.add_images|length|default(0) }};
+    $('#admin_portfolio_image').fileupload({
+        {% if id != null %}url: "../edit/addimg",
+        {% else %}url: "./edit/addimg",
+        {% endif %}
+        type: "post",
+        dataType: 'json',
+        done: function (e, data) {
+            $.each(data.files, function (index, file) {
+            });
+        $('#progress').hide();
+//        hideSvg();
+        },
+        always: function (e, data) {
+            console.log(data.result.files);
+            $('ul#thumb').html('<a rel="lightbox" href="{{ url('homepage') }}' + data.result.files + '"><img src="{{ url('homepage') }}' + data.result.files + '" width="200"></a>');
+//            $('#admin_portfolio_image').val(data.result.files);
+            $('input#filename').val(data.result.files);
+            $('#progress').hide();
+            $('#progress .progress-bar').width('0%');
+        },
+        start: function (e, data) {
+            $('#progress').show();
+        },
+        acceptFileTypes: /(\.|\/)(gif|jpe?g|png)$/i,
+        maxFileSize: 10000000,
+        maxNumberOfFiles: 10,
+        progressall: function (e, data) {
+            var progress = parseInt(data.loaded / data.total * 100, 10);
+            $('#progress .progress-bar').css(
+                    'width',
+                    progress + '%'
+            );
+        },
+        processalways: function (e, data) {
+            if (data.files.error) {
+                alert("画像ファイルサイズが大きいか画像ファイルではありません。");
+            }
+        }
+    });
+
+
+    $('#admin_portfolio_image2').fileupload({
+        url: "../edit/addpimg",
+        type: "post",
+        dataType: 'json',
+        done: function (e, data) {
+            $.each(data.files, function (index, file) {
+            });
+        $('#progress').hide();
+        },
+        always: function (e, data) {
+            console.log(data.result.files);
+            $('ul#image').append('<li><a rel="lightbox[group]" href="{{ url('homepage') }}upload/portfolio_image/{{ id }}/' + data.result.files + '" data-img="' + data.result.files + '"><img src="{{ url('homepage') }}upload/portfolio_image/{{ id }}/' + data.result.files + '" height="100"></a><a class="delete-image" style="position:absolute;right: -20px;z-index:10;"><svg class="cb cb-close"><use xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="#cb-close"></use></svg></a></li>');
+            $('#progress2').hide();
+            $('#progress2 .progress-bar').width('0%');
+        },
+        start: function (e, data) {
+            $('#progress2').show();
+        },
+        acceptFileTypes: /(\.|\/)(gif|jpe?g|png)$/i,
+        maxFileSize: 10000000,
+        maxNumberOfFiles: 10,
+        progressall: function (e, data) {
+            var progress = parseInt(data.loaded / data.total * 100, 10);
+            $('#progress2 .progress-bar').css(
+                'width',
+                progress + '%'
+            );
+        },
+        processalways: function (e, data) {
+            if (data.files.error) {
+                alert("画像ファイルサイズが大きいか画像ファイルではありません。");
+            }
+        }
+    });
+
+
+
+    // 画像アップロード
+    $('#file_upload').on('click', function () {
+        $('#admin_portfolio_image').click();
+    });
+
+
+    // 画像アップロード2
+    $('#file_upload2').on('click', function () {
+        $('#admin_portfolio_image2').click();
+    });
+
+
+    $('#type input').change(function(){
+        var checknum = $('#type input').index(this);
+        $('#formtype').val(checknum + 1);
+    });
+
+    $('.preview').click(function() {
+    if (confirm('プレビューを表示しますか？')) {
+        window.open("{{ url('homepage') }}{{ img }}");
+        return false;
+    }
+    });
+
+    $('.delete').click(function() {
+    if (confirm('この情報を削除しても宜しいですか？')) {
+        window.location.href = '../delete/{{ id }}';
+        return false;
+    }
+    });
+
+    $(document).on('click', '.delete-image', function() {
+        if (confirm('この画像を削除しますか？')) {
+            var img = $(this).parent().children('a').data('img');
+            $(this).parent().remove();
+            $.ajax({
+                type: "POST",
+                url: "../edit/delpimg",
+                dataType: 'json',
+                data: {
+                    'filename': img,
+                    'id': {{ id }},
+                },
+            });
+        }
+    });
+
+});
+
+</script>
+{% endblock javascript %}
+
+{% block main %}
+<link rel="stylesheet" href="{{ app.config.admin_urlpath }}/assets/css/lightbox.css">
+
+<style>
+#file_upload2 { cursor: pointer; cursor: hand; }
+#file_upload2:hover {
+    opacity: 0.8;
+}
+ul#image li {
+    float: left;
+    max-height: 100px;
+border:1px solid #ddd;
+}
+ul#image li img {
+    max-height: 100px;
+}
+.modalcenter{
+    padding:10% 0;
+}
+
+</style>
+    <form role="form" name="content_page_form" id="content_page_form" method="post"
+        {% if id != null %}action="../commit">{% else %}action="./commit">{% endif %}
+        {{ form_widget(form._token) }}
+        <div class="row" id="aside_wrap">
+            <div class="col-md-8">
+                <div class="box form-horizontal">
+                    <div class="box-header">
+                        <h3 class="box-title">作品集編集</h3>
+                    </div>
+                    <!-- /.box-header -->
+                    <div class="box-body">
+                        <div class="form-group">
+                            {{ form_label(form.id) }}
+                            <div class="col-sm-9 col-lg-10"> 
+                                {% if id != null %}
+                                {{ id }}
+                                {% endif %}
+				<input type="hidden" name="admin_portfolio_edit[id]" value="{% if id != null %}{{ id }}{% endif %}">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            {{ form_label(form.name) }}
+                            <div class="col-sm-9 col-lg-10">
+                                {{ form_widget(form.name) }}
+                                {{ form_errors(form.name) }}
+                            </div>
+                        </div>
+
+                        <div class="form-group" id="type">
+                            {{ form_label(form.typeform) }}
+                            <div class="col-sm-9 col-lg-10">
+                                {{ form_widget(form.typeform) }}
+                                {{ form_errors(form.typeform) }}
+                                <input type="hidden" id="formtype" name="admin_portfolio_edit[type]" value="">
+                            </div>
+                        </div>
+                        <div id="detail_box__image" class="form-group">
+                            {{ form_label(form.img) }}
+                            <div id="detail_files_box" class="col-sm-9 col-lg-10">
+                                <div class="photo_files" id="drag-drop-area">
+                                    <ul id="thumb" class="clearfix">{% if img != null %}<a rel="lightbox" href="{{ url('homepage') }}{{ img }}"><img src="{{ url('homepage') }}{{ img }}" width="200"></a>{% endif %}</ul>
+                                    <input type="hidden" id="filename" name="admin_portfolio_edit[img]" value="{% if img != null %}{{ img }}{% endif %}">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group marB30">
+                            <div id="detail_box__file_upload" class="col-sm-offset-2 col-sm-9 col-lg-10 ">
+                                 <div id="progress" class="progress progress-striped active" style="display:none;">
+                                    <div class="progress-bar progress-bar-info"></div>
+                                 </div>
+                                 <input type="file" id="admin_portfolio_image" name="admin_portfolio_image" multiple="multiple" data-form-data='{"id": {{ id }}}' accept="image/*" style="display:none;" />
+                                 <a id="file_upload" class="with-icon">
+                                    <svg class="cb cb-plus"> <use xlink:href="#cb-plus" /></svg>ファイルをアップロード
+                                 </a>
+                            </div>
+                        </div>
+                        <div id="detail_box__comment" class="form-group">
+                            <label class="col-sm-2 control-label required">作品画像</label>
+                            <div id="detail_files_box" class="col-sm-9 col-lg-10">
+                                <div class="photo_files" id="drag-drop-area">
+                                    <ul id="image" class="clearfix">
+                                    {% for image in images %}
+                                         <li><a rel="lightbox[group]" href="{{ url('homepage') }}upload/portfolio_image/{{ id }}/{{ image.file_name }}" data-img="{{ image.file_name }}"><img src="{{ url('homepage') }}/upload/portfolio_image/{{ id }}/{{ image.file_name }}" height="100"></a><a class="delete-image" style="position:absolute;right: -20px;z-index:10;"><svg class="cb cb-close"><use xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="#cb-close"></use></svg></a></li>
+                                    {% endfor %}
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group marB30">
+                            <div id="detail_box__file_upload" class="col-sm-offset-2 col-sm-9 col-lg-10 ">
+                                 <div id="progress2" class="progress progress-striped active" style="display:none;">
+                                    <div class="progress-bar progress-bar-info"></div>
+                                 </div>
+                                 <input type="file" id="admin_portfolio_image2" name="admin_portfolio_image2" multiple="multiple" data-form-data='{"id": {{ id }}}' accept="image/*" style="display:none;" />
+                                 <a id="file_upload2" class="with-icon">
+                                    <svg class="cb cb-plus"> <use xlink:href="#cb-plus" /></svg>ファイルをアップロード
+                                 </a>
+                            </div>
+                        </div>
+                        <div id="detail_box__comment" class="form-group">
+                            {{ form_label(form.comment) }}
+                            <div id="detail_files_box" class="col-sm-9 col-lg-10">
+                                {{ form_widget(form.comment) }}
+                                {{ form_errors(form.comment) }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- /.col -->
+            <div class="col-md-4">
+                <div class="col_inner" id="aside_column">
+                    <div id="common_button_box" class="box no-header">
+                       <div id="common_button_box__body" class="box-body">
+                           <div id="common_button_box__status" class="row">
+                               <div class="col-xs-12 ">
+                                   <div class="form-group text-center">
+                                   {{ form_widget(form.publish) }}
+                                   {{ form_errors(form.publish) }}
+                                   </div>
+                               </div>
+                            </div>
+                            <div id="common_button_box__insert_button" class="row text-center">
+                                <div class="col-sm-6 col-sm-offset-3 col-md-12 col-md-offset-0">
+                                    <button class="btn btn-primary btn-block btn-lg"
+                                        onclick="document.content_page_form.submit();">{% if id is null %}登録{% else %}作品情報を修正{% endif %}
+                                    </button>
+                                </div>
+                            </div>
+                            <div id="common_button_box__operation_button" class="row text-center with-border">
+                                <div class="col-sm-6 col-sm-offset-3 col-md-12 col-md-offset-0">
+                                    <ul class="col-2">
+                                        {% if id != null %}
+                                        <li>
+                                            <button class="btn btn-default btn-block preview">確認</button>
+                                         </li>
+                                         <li>
+                                            <button class="btn btn-default btn-block delete">削除</button>
+                                         </li>
+                                         {% else %}
+                                         {% endif %}
+                                    </ul>
+                                </div>
+                            </div>
+                        </div><!-- /.box-body -->
+                    </div><!-- /.box -->
+                </div>
+                <div class="col_inner" id="aside_column">
+                    <div class="box no-header">
+                        <div class="box-body">
+                            <div class="row text-center">
+                                <div class="col-sm-9 col-sm-offset-0 col-md-12 col-md-offset-0">
+                                     <svg class="cb cb-clock"> <use xlink:href="#cb-clock" /></svg>登録日：{{ create_date.date|date('Y-m-d') }}<br />
+                                     <svg class="cb cb-clock"> <use xlink:href="#cb-clock" /></svg>更新日：{{ update_date.date|date('Y-m-d') }}
+                                </div>
+                            </div>
+                        </div>
+                        <!-- /.box-body -->
+                    </div>
+                    <!-- /.box -->
+                </div>
+            </div>
+            <!-- /.col -->
+        </div>
+    </form>
+{% endblock %}

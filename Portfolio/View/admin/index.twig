@@ -1,0 +1,257 @@
+{% extends 'default_frame.twig' %}
+
+{% block title %}作品管理{% endblock %}
+{% block sub_title %}作品管理マスター{% endblock %}
+
+
+{% block javascript %}
+<script>
+$(function() {
+    $('#admin_search_portfolio_typeform').children('label').eq(0).text('指定なし');
+    $('#admin_search_portfolio_publish').children('label').eq(0).text('指定なし');
+
+    var previmg;
+    $('.preview').click(function() {
+        previmg = $(this).data('url');
+        if (confirm('プレビューを表示しますか？')) {
+            window.open().location.href = previmg;
+            return false;
+        }
+    });
+
+    $('.delete').click(function() {
+        var thisid = $(this).data('id');
+        if (confirm('この情報を削除してもよろしいですか？')) {
+            window.location.href = './portfolio/delete/' +thisid;
+            return false;
+        }
+    });
+
+    $('.yes').click(function() {
+        $('.dialog').css('display', 'none');
+        window.open().location.href = previmg;
+    });
+
+    var typearr = [''];
+    {% for cate in category %}
+        typearr.push('{{ cate }}');
+    {% endfor %}
+console.log(typearr);
+    var cont = $('.Portfolio_type').size();
+    for (var i = 0; i < (cont); i++) {
+        $('.Portfolio_type').eq(i).html(typearr[$('.Portfolio_type').eq(i).html()]);
+    }
+
+    $('.rank').click(function() {
+        var mode = $(this).data('mode');
+        var thisid = $(this).children('a').data('id');
+        var t = $(this).parent().parent().parent().parent();
+        var index = $('.rank').index(this);
+        if (mode == 'up'){
+            var targetid = $('.rank').eq(index - 1).children('a').data('id');
+            if (t.index() ==  0) { return false; }
+
+        } else {
+            var targetid = $('.rank').eq(index + 1).children('a').data('id');
+            if (!targetid) { return false; }
+        }
+        $.ajax( {
+            type: 'POST',
+            url: './portfolio/rank',
+            cache: false,
+            data: {
+                'targetid': targetid,
+                'thisid': thisid,
+            }
+        }).done(function(data){ 
+            if (mode == 'up'){
+                if(t.prev("tr")) {
+                    t.insertBefore(t.prev("tr")[0]);
+                }
+            } else {
+                if(t.next("tr")) {
+                    t.insertAfter(t.next("tr")[0]);
+                }
+            }
+	}).fail(function(data){ 
+		alert("error!");
+	});
+    });
+});
+</script>
+<style>
+.preview {
+        cursor: pointer;
+        cursor: hand;
+}
+.dialog { 
+        display: none; 
+        width: 300px;
+        height: 140px;
+        padding: 50px;
+        margin: 0 auto;
+        position: absolute;
+        top: 200px;
+        left: 300px;
+        text-align: center;
+        background: #fff;
+        border: 1px solid #ccc;
+        z-index: 10;
+}
+.dialog span {
+        margin: 0 20px;
+    font-size: 12px;
+        border: 1px solid #ccc;
+        cursor: pointer;
+    cursor: hand;
+}
+.form-group label {
+	margin-right: 10px;
+}
+</style>
+{% endblock javascript %}
+{% block main %}
+<form name="search_form" id="search_form" method="post" action="">
+    {{ form_widget(searchForm._token) }}
+    <!--検索条件設定テーブルここから-->
+    <div class="search-box">
+        <div class="row">
+            <div class="col-md-12 accordion">
+                {{ form_widget(searchForm.multi, { attr: { placeholder: 'ID・作品名', class : 'input_search' } } ) }}
+                <a class="toggle" href="#"><svg class="cb cb-minus"> <use xlink:href="#cb-minus"/></svg> <svg class="cb cb-minus"> <use xlink:href="#cb-minus"/></svg></a>
+                <div class="search-box-inner accpanel">
+                    <div class="row">
+                        <div class="col-sm-12 col-lg-10 col-lg-offset-1 search">
+
+                            <div class="col-xs-6">
+                                <div class="form-group">
+                                    <label>カテゴリ</label>
+                                    {{ form_widget(searchForm.typeform) }}
+                                    {{ form_errors(searchForm.typeform) }}
+                                </div>
+                            </div>
+                            <div class="col-xs-6">
+                                <div class="form-group">
+                                    <label>種別</label>
+                                    {{ form_widget(searchForm.publish) }}
+                                    {{ form_errors(searchForm.publish) }}
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <label>登録日</label>
+                                <div class="form-group range">
+                                    {{ form_widget(searchForm.create_date_start, {'attr': {'class': 'input_cal'}}) }} ～ {{ form_widget(searchForm.create_date_end, {'attr': {'class': 'input_cal'}}) }}
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <label>更新日</label>
+                                <div class="form-group range">
+                                     {{ form_widget(searchForm.update_date_start, {'attr': {'class': 'input_cal'}}) }} ～ {{ form_widget(searchForm.update_date_end, {'attr': {'class': 'input_cal'}}) }}
+                                </div>
+                            </div>
+                            <div class="col-sm-12">
+                                <p class="text-center"><a href="#" class="search-clear">検索条件をクリア</a></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- /.col -->
+        </div>
+        <div class="row btn_area">
+            <div class="col-xs-8 col-xs-offset-2 col-sm-4 col-sm-offset-4 text-center">
+                <button class="btn btn-primary btn-block btn-lg" onclick="fnChangeActionSubmit(''); return false;">
+                    検索する <svg class="cb cb-angle-right"><use xlink:href="#cb-angle-right"></svg>
+                </button>
+            </div>
+            <!-- /.col -->
+        </div>
+    </div>
+{% if pagination %}
+    <div class="row">
+        <div class="col-md-12">
+            <div class="box">
+                {% if pagination and pagination.totalItemCount > 0 %}
+                <div class="box-header with-arrow">
+                    <h3 class="box-title">検索結果 <span class="normal"><strong>{{ pagination.totalItemCount }} 件</strong> が該当しました</span></h3>
+                </div><!-- /.box-header -->
+                {% if pagination.totalItemCount > 0 %}
+                    {% include "pager.twig" with { 'pages' : pagination.paginationData, 'routes' : 'admin_portfolio' } %}
+                {% endif %}
+                <div class="box-body">
+                    <div class="row">
+                        <div class="col-md-12">
+                            <ul class="sort-dd">
+                                <li class="dropdown">
+                                    <a class="dropdown-toggle" data-toggle="dropdown">20件<svg class="cb cb-angle-down icon_down"><use xlink:href="#cb-angle-down"></svg></a>
+                                    <ul class="dropdown-menu">
+                                        <li><a>50件</a></li>
+                                        <li><a>100件</a></li>
+                                    </ul>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="table_list">
+                        <div class="table-responsive with-border">
+                            <table class="table table-striped">
+                                <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>作品名</th>
+                                    <th>カテゴリ</th>
+                                    <th>画像</th>
+                                    <th>登録日</th>
+                                    <th></th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                {% for Portfolio in pagination %}
+                                <tr>
+                                    <td class="Portfolio_id">{{ Portfolio.id }}</td>
+                                    <td class="Portfolio_name"><a href="./portfolio/edit/{{ Portfolio.id }}">{{ Portfolio.name }}</a></td>
+                                    <td class="Portfolio_type">{{ Portfolio.type }}</td>
+                                    <td class="Portfolio_img">{% if Portfolio.img %}<img src="{{ url('homepage') }}{{ Portfolio.img }}" width="60">{% else %}未登録{% endif %}</td>
+                                    <td class="Portfolio_createdate">{{ Portfolio.create_date.date|date('Y-m-d H:i') }}</td>
+                                    <td class="Portfolio_edit">
+                                        <div id="result_list_main__item_menu--{{ Portfolio.id }}" class="dropdown">
+                                            <a id="result_list_main__item_menu_toggle--{{ Portfolio.id }}" class="dropdown-toggle" data-toggle="dropdown"><svg class="cb cb-ellipsis-h"> <use xlink:href="#cb-ellipsis-h" /></svg></a>
+                                            <ul id="result_list_main_item_menu--{{ Portfolio.id }}" class="dropdown-menu dropdown-menu-right">
+                                            <li><a href="javascript:void(0);" class="preview" data-url="{{ url('homepage') }}{{ Portfolio.img }}">確認</a>
+                                            <li><a href="javascript:void(0);" class="delete" data-id="{{ Portfolio.id }}" data-method="delete">削除</a></li>
+                                            <li class="rank" data-mode="up"><a href="javascript:void(0);" data-id="{{ Portfolio.id }}">上へ</a></li>
+                                            <li class="rank" data-mode="down"><a href="javascript:void(0);" data-id="{{ Portfolio.id }}">下へ</a></li>
+                                            </ul>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div><!-- /.box-body -->
+                {% if pagination.totalItemCount > 0 %}
+                    {% include "pager.twig" with { 'pages' : pagination.paginationData, 'routes' : 'admin_portfolio' } %}
+                    <div class="row btn_area">
+                        <div class="col-xs-8 col-xs-offset-2 col-sm-4 col-sm-offset-4 text-center">
+                            <button style="display: none;" class="btn btn-primary btn-block btn-lg" onclick="fnChangeActionSubmit('{{ url('admin_portfolio_regist') }}');">
+                                新規登録 <svg class="cb cb-angle-right"><use xlink:href="#cb-angle-right"></svg>
+                            </button>
+                        </div>
+                        <!-- /.col -->
+                    </div>
+                {% endif %}
+                {% else %}
+                    <div class="box-header with-arrow">
+                        <h3 class="box-title">検索条件に該当するデータがありませんでした。</h3>
+                    </div><!-- /.box-header -->
+                {% endif %}
+            </div><!-- /.box -->
+        </div><!-- /.col -->
+    </div>
+{% endif %}
+
+</form>
+
+{% endblock %}

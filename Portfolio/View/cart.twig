@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<title>旅の本 / TOPページ</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="/template/default/img/common/favicon.ico">
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+<style>
+    body * { display: none; }
+</style>
+<script>
+$(function(){
+   if ($('#product_class_id').val() == 'fail') {
+       alert('データが不正です！');
+       location.href = '../products/detail/{{ pr_id }}';
+       return false;
+   }
+   $('#form').submit();
+});
+</script>
+</head>
+{% block main %}
+<body>
+<form id="form" action="../cart/add" method="post">
+<input type="hidden" name="product_id" value="{{ pr_id }}">{{ pr_id }}
+<input type="hidden" name="product_class_id" value="{{ product_class_id }}">
+</form>
+{% endblock %}
+</body>
+</html>

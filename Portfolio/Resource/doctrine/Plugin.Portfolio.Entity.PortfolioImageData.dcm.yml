@@ -1,0 +1,33 @@
+Plugin\Portfolio\Entity\PortfolioImageData:
+    type: entity
+    table: plg_portfolio_image
+    repositoryClass: Plugin\Portfolio\Repository\PortfolioImageDataRepository
+    indexes:
+        image_id:
+            columns: image_id
+    id:
+        image_id:
+            type: smallint
+            nullable: false
+            unsigned: false
+            id: true
+            generator:
+                strategy: NONE
+    fields:
+        portfolio_id:
+            type: integer
+            nullable: false
+            column: portfolio_id
+        file_name:
+            type: text
+            nullable: false
+            column: file_name
+        rank:
+            type: integer
+            nullable: false
+            column: rank
+        create_date:
+            type: datetime
+            nullable: false
+            
+    lifecycleCallbacks: {  }
